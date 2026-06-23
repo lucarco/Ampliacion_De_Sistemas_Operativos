@@ -1,0 +1,12 @@
+1. Crear una tubería con nombre usando mkfifo
+mkfifo $HOME/tuberia1
+Este comando crea una tubería con nombre llamada "tuberia1" en tu directorio home. Por defecto, se crea con permisos 0666 modificados por tu umask.
+2. Examinar las propiedades de la tubería (Usando stat o ls -la) 
+stat $HOME/tuberia1
+ls -la $HOME/tuberia1 (prw-r--r-- 1 usuario grupo 0 May 5 12:34 /home/usuario/tuberia1 => La 'p' al inicio confirma que es una tubería con nombre)
+3.Comprobar el funcionamiento de la tubería (se necesita abrir dos terminales)
+Terminal 1 (Lector)
+cat < $HOME/tuberia1
+Terminal 2 (Escritor)
+echo "Hola, esto es un mensaje de prueba" > $HOME/tuberia1
+=> Se mostrará en termina1: "Hola, esto es un mensaje de prueba"

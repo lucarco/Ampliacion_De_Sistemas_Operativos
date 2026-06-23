@@ -1,0 +1,74 @@
+SELECT
+
+select(...) en C es una llamada del sistema que permite monitorizar múltiples descriptores de 
+archivo (como sockets o archivos) para comprobar si están listos para realizar operaciones de entrada/salida 
+(lectura, escritura o detectar excepciones).
+
+int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
+nfds: el descriptor más alto + 1.
+readfds: conjunto de descriptores a vigilar por si hay datos para leer.
+writefds: conjunto de descriptores a vigilar por si están listos para escribir.
+exceptfds: conjunto a vigilar por condiciones excepcionales (como errores).
+timeout: cuánto esperar (puede ser 0 para no esperar nada, o NULL para esperar indefinidamente).
+
+Antes de llamar a select, defines qué descriptores quieres vigilar, usando macros:
+FD_ZERO(&readfds);         // Limpia el conjunto
+FD_SET(fd, &readfds);      // Añade fd al conjunto
+
+-----------------------------------------------------------------------------------------------------------
+POLL
+
+poll(...), que es otra llamada del sistema para vigilar múltiples descriptores de archivo, pero más moderna 
+y flexible que select(...), en lugar de mapa de bits se utiliza un array de estructuras pollfd de tamaño
+variable (el argumento nfds indica el número de elementos de este array)
+
+int poll(struct pollfd fds[], nfds_t nfds, int timeout);
+struct pollfd {
+    int fd;              /* File descriptor */
+    short events;        /* Requested events bit mask */ => mapa de bits (eventos a monitorizar)
+    short revents;       /* Returned events bit mask */ => mapa de bits (eventos que ocurrieron realmente)
+};
+
+Macros para gestionar  events y revents:
+❏ POLLIN Datos disponibles para leer 
+❏ POLLOUT Se puede escribir sin bloquear
+❏ POLLPRI Datos urgentes disponibles  (sockets)
+❏ POLLRDHUP Desconexión remota (sockets) ( habilitada con _GNU_SOURCE en Linux)
+❏ POLLERR Ha ocurrido un error 
+❏ POLLHUP Hang-up (cierre de la conexión, EOF)
+❏ POLLNVAL Descriptor inválido (el descriptor se ha cerrado)
+
+--------------------------------------------------------------------------------------------------------
+PIPES (truberías)
+
+pipe crea un canal unidireccional de comunicación entre procesos, representado por dos descriptores de archivo:
+
+int pipe(int fd[2]);
+fd[0] → extremo de lectura.
+fd[1] → extremo de escritura.
+
+---------------------------------------------------------------------------------------------------------
+DUP2
+
+La función dup2() manipula descriptores de fichero.
+
+int dup2(int oldfd, int newfd);
+oldfd: El descriptor de archivo existente que quieres duplicar
+newfd: El descriptor de archivo que quieres que sea una copia de oldfd
+Retorna: El nuevo descriptor de archivo (newfd) en caso de éxito, o -1 en caso de error
+
+(Hace que newfd se convierta en una copia de oldfd. Después de la llamada, oldfd y newfd apuntan al mismo
+archivo, comparten la misma posición del puntero de archivo, y tienen los mismos permisos. Es importante 
+entender que no se copia el contenido del archivo, sino que ambos descriptores ahora referencian el mismo archivo o recurso.)
+
+----------------------------------------------------------------------------------------------------------
+
+MKFIFO
+
+mkfifo() es una función que crea una tubería con nombre (también llamada "FIFO" - First In, First Out).
+A diferencia de las tuberías sin nombre creadas con pipe(), una tubería con nombre existe como un 
+archivo real en el sistema de archivos y tiene un punto de acceso persistente.
+
+int mkfifo(const char *pathname, mode_t mode);
+pathname: Es la ruta donde se creará el archivo FIFO en el sistema de archivos => Nombre deseado para la tubería
+mode: Son los permisos de acceso al archivo
